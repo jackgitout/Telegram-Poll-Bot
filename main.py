@@ -22,7 +22,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    questions = keys.split(', ')
+    questions = keys.OPTIONS.split(', ')
     message = await context.bot.send_poll(
         update.effective_chat.id,
         f"[Week of {next_weekday(datetime.now(), 0)}] Training/scrim/pickup - vote for all that you'll show up for",
