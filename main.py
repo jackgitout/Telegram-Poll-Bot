@@ -48,7 +48,7 @@ async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
     answer = update.poll_answer
     answered_poll = context.bot_data[answer.poll_id]
 
-    if not mute:
+    if not mute_option:
       await context.bot.send_message(
           answered_poll["chat_id"],
           f"{update.effective_user.mention_html()} just polled!",
