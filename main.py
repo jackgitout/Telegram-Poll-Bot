@@ -15,6 +15,8 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+mute = True
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -33,23 +35,42 @@ async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Save some info about the poll the bot_data for later use in receive_poll_answer
     payload = {
         message.poll.id: {
-            "questions": questions,
-            "message_id": message.message_id,
-            "chat_id": update.effective_chat.id,
-            "answers": 0,
+            'questions': questions,
+            'message_id': message.message_id,
+            'chat_id': update.effective_chat.id,
+            'answers': 0,
         }
     }
     context.bot_data.update(payload)
 
-async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, mute_option: mute) -> None:
     """Summarize a users poll vote"""
     answer = update.poll_answer
     answered_poll = context.bot_data[answer.poll_id]
 
+    if not mute:
+      await context.bot.send_message(
+          answered_poll["chat_id"],
+          f"{update.effective_user.mention_html()} just polled!",
+          parse_mode=ParseMode.HTML
+    )
+
+async def unmute_bot(update, context):
+    global mute
+    mute = False
+
     await context.bot.send_message(
-        answered_poll["chat_id"],
-        f"{update.effective_user.mention_html()} just polled!",
-        parse_mode=ParseMode.HTML
+        chat_id=update.effective_chat.id,
+        text='I am now unmuted, will update player poll responses'
+    )
+
+async def mute_bot(update, context):
+    global mute
+    mute = True
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='I am now muted, will stop updating player poll responses'
     )
 
 async def handle_message(update, context):
@@ -70,8 +91,12 @@ def next_weekday(d, weekday):
 if __name__ == '__main__':
     application = ApplicationBuilder().token(keys.API_KEY).build()
 
+    # assign bot commands to code functions
+    # /poll to async def poll
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('poll', poll))
+    application.add_handler(CommandHandler('mute', mute_bot))
+    application.add_handler(CommandHandler('unmute', unmute_bot))
     application.add_handler(MessageHandler(filters.TEXT, handle_message))
     application.add_handler(PollAnswerHandler(receive_poll_answer))
     application.add_error_handler(error)
