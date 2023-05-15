@@ -43,12 +43,13 @@ async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
     context.bot_data.update(payload)
 
-async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, mute_option: mute) -> None:
+async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    global mute
     """Summarize a users poll vote"""
     answer = update.poll_answer
     answered_poll = context.bot_data[answer.poll_id]
 
-    if not mute_option:
+    if not mute:
       await context.bot.send_message(
           answered_poll["chat_id"],
           f"{update.effective_user.mention_html()} just polled!",
