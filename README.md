@@ -15,7 +15,7 @@
 2. Install the necessary packages with pip (package installer for Python)
 
         
-        pip install python-telegram-bot
+        $ pip install python-telegram-bot
         
 3. [Set up a test bot with BotFather](https://core.telegram.org/bots/)
    
