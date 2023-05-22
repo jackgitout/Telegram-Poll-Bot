@@ -10,7 +10,7 @@
 1. To get started with the app, first clone the repo and <code>cd</code> into the directory:
   
         $ gh repo clone jackgitout/Telegram-Poll-Bot
-        $ cd github_autocomplete
+        $ cd Telegram-Poll-Bot
 
 2. Install the necessary packages with pip (package installer for Python)
 
