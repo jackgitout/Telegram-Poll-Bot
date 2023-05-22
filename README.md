@@ -1,6 +1,6 @@
 # Setup
 
-* Python Version 3.1.1
+* Python Version 3.11
 
 * Dependencies
   [Python Telegram Bot](https://github.com/python-telegram-bot/python-telegram-bot)
