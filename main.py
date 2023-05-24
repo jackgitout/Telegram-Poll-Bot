@@ -47,12 +47,35 @@ async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
     global mute
     """Summarize a users poll vote"""
     answer = update.poll_answer
-    answered_poll = context.bot_data[answer.poll_id]
+    try:
+      answered_poll = context.bot_data[answer.poll_id]
+    except KeyError:
+      return
+
+    # looks at bot_data for latest poll id
+    # only allow poll updates for the latest poll
+    if answer.poll_id != latest_poll_id(context.bot_data):
+       return
+    else:
+       questions = answered_poll['questions']
 
     if not mute:
+      selected_options = answer.option_ids
+      answer_string = ''
+      for question_id in selected_options:
+        if question_id != selected_options[-1]:
+          answer_string += questions[question_id] + ' and '
+        else:
+          answer_string += questions[question_id]
+
+      if answer_string == '':
+        response_msg = f"{update.effective_user.mention_html()} retracted previous votes"
+      else:
+        response_msg = f"{update.effective_user.mention_html()} just polled for {answer_string}!"
+
       await context.bot.send_message(
-          answered_poll["chat_id"],
-          f"{update.effective_user.mention_html()} just polled!",
+          answered_poll['chat_id'],
+          response_msg,
           parse_mode=ParseMode.HTML
     )
 
@@ -87,7 +110,10 @@ def next_weekday(d, weekday):
     days_ahead = weekday - d.weekday()
     if days_ahead <= 0:  # Target day already happened this week
         days_ahead += 7
-    return (d + timedelta(days_ahead)).strftime("%d-%b")
+    return (d + timedelta(days_ahead)).strftime('%d-%b')
+
+def latest_poll_id(bot_data):
+    return max(list(bot_data))
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(keys.API_KEY).build()
