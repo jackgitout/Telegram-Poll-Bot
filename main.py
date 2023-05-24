@@ -20,7 +20,10 @@ mute = True
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="I'm a bot, now ready to take training attendance!\n/poll: generate poll"
+        text="I'm a bot, now ready to take training attendance!\n" +
+        "/poll: generate poll\n" +
+        "/mute: generate annoucements for updates to latest poll\n" +
+        "/unmute: stop announcements for updates to latest poll"
     )
 
 async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
