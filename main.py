@@ -57,7 +57,11 @@ async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
       try:
         answered_poll = context.bot_data[answer.poll_id]
       except KeyError:
-        chat_id = retrieve_chat_id(update, context)
+        try:
+          chat_id = retrieve_chat_id(update, context)
+        except KeyError:
+          return
+
         await context.bot.send_message(
           chat_id,
           f"{update.effective_user.mention_html()} just made changes",
@@ -148,7 +152,10 @@ def retrieve_chat_id(update, context = None):
   if update.effective_chat:
     return update.effective_chat.id
   else:
-    return context.bot_data['0']['chat_id']
+    try:
+      return context.bot_data['0']['chat_id']
+    except KeyError:
+      raise KeyError('Unable to retrieve chat_id')
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(keys.API_KEY).build()
