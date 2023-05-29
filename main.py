@@ -1,12 +1,13 @@
 import logging
 import Constants as keys
 import Responses as R
+import Helpers as Helper
 from telegram import (
   Update
 )
 from telegram.constants import ParseMode
 from telegram.ext import *
-from datetime import datetime, timedelta
+from datetime import datetime
 
 print ('Bot started...')
 
@@ -19,21 +20,21 @@ mute = True
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   await context.bot.send_message(
-    chat_id = retrieve_chat_id(update),
+    chat_id = Helper.retrieve_chat_id(update),
     text = "I'm a bot, now ready to take training attendance!\n" +
     "/poll: generate poll\n" +
     "/mute: generate annoucements for updates to latest poll\n" +
     "/unmute: stop announcements for updates to latest poll"
   )
 
-  store_chat_id(update, context)
+  Helper.store_chat_id(update, context)
 
 async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   questions = keys.OPTIONS.split(', ')
-  chat_id = retrieve_chat_id(update)
+  chat_id = Helper.retrieve_chat_id(update)
   message = await context.bot.send_poll(
     chat_id,
-    f"[Week of {next_weekday(datetime.now(), 0)}] Training/scrim/pickup - vote for all that you'll show up for",
+    f"[Week of {Helper.next_weekday(datetime.now(), 0)}] Training/scrim/pickup - vote for all that you'll show up for",
     questions,
     is_anonymous=False,
     allows_multiple_answers=True,
@@ -58,7 +59,7 @@ async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
         answered_poll = context.bot_data[answer.poll_id]
       except KeyError:
         try:
-          chat_id = retrieve_chat_id(update, context)
+          chat_id = Helper.retrieve_chat_id(update, context)
         except KeyError:
           return
 
@@ -71,7 +72,7 @@ async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE
 
       # looks at bot_data for latest poll id
       # only allow poll updates for the latest poll
-      if answer.poll_id != latest_poll_id(context.bot_data):
+      if answer.poll_id != Helper.latest_poll_id(context.bot_data):
           return
       else:
           questions = answered_poll['questions']
@@ -122,41 +123,14 @@ async def handle_message(update, context):
 
 async def aware(update, context):
   # function is used to support updates when polls are initialized when bot was offline
-  store_chat_id(update, context)
+  Helper.store_chat_id(update, context)
   await context.bot.send_message(
-    retrieve_chat_id(update),
+    Helper.retrieve_chat_id(update),
     text='Done, stored chat_id'
   )
 
 async def error(update, context):
   await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Update {update} caused error {context.error}")
-
-def next_weekday(d, weekday):
-  days_ahead = weekday - d.weekday()
-  if days_ahead <= 0:  # Target day already happened this week
-    days_ahead += 7
-  return (d + timedelta(days_ahead)).strftime('%d-%b')
-
-def latest_poll_id(bot_data):
-  return max(list(bot_data))
-
-def store_chat_id(update, context):
-  chat_id = retrieve_chat_id(update)
-  payload = {
-    '0': {
-      'chat_id': chat_id,
-    }
-  }
-  context.bot_data.update(payload)
-
-def retrieve_chat_id(update, context = None):
-  if update.effective_chat:
-    return update.effective_chat.id
-  else:
-    try:
-      return context.bot_data['0']['chat_id']
-    except KeyError:
-      raise KeyError('Unable to retrieve chat_id')
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(keys.API_KEY).build()
