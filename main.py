@@ -22,12 +22,27 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   await context.bot.send_message(
     chat_id = Helper.retrieve_chat_id(update),
     text = "I'm a bot, now ready to take training attendance!\n" +
-    "/poll: generate poll\n" +
-    "/mute: generate annoucements for updates to latest poll\n" +
-    "/unmute: stop announcements for updates to latest poll"
+           "/poll: generate poll\n" +
+           "/mute: generate annoucements for updates to latest poll\n" +
+           "/unmute: stop announcements for updates to latest poll"
   )
 
   Helper.store_chat_id(update, context)
+
+async def close(update: Update, context: ContextTypes.DEFAULT_TYPE):
+  chat_id = Helper.retrieve_chat_id(update)
+  message_id = Helper.retrieve_message_id(update, context)
+
+  if message_id:
+    await context.bot.stop_poll(
+      chat_id,
+      message_id
+    )
+
+    await context.bot.send_message(
+      chat_id,
+      text='Nothing to see here, poll is now closed!'
+    )
 
 async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   questions = keys.OPTIONS.split(', ')
@@ -138,6 +153,7 @@ if __name__ == '__main__':
     # assign bot commands to code functions
     # /poll to async def poll
     application.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('close', close))
     application.add_handler(CommandHandler('poll', poll))
     application.add_handler(CommandHandler('mute', mute_bot))
     application.add_handler(CommandHandler('unmute', unmute_bot))

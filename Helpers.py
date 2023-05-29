@@ -26,3 +26,13 @@ def retrieve_chat_id(update, context=None):
       return context.bot_data['0']['chat_id']
     except KeyError:
       raise KeyError('Unable to retrieve chat_id')
+
+def retrieve_message_id(update, context):
+  try:
+    return update.effective_message.reply_to_message.message_id
+  except AttributeError:
+    try:
+      poll_id = latest_poll_id(context.bot_data)
+      return context.bot_data[poll_id]['message_id']
+    except ValueError:
+      return None
