@@ -117,7 +117,8 @@ async def handle_message(update, context):
   text = str(update.message.text).lower()
   response = R.sample_responses(text)
 
-  await context.bot.send_message(chat_id=update.effective_chat.id, text=response)
+  if not response == '':
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=response)
 
 async def aware(update, context):
   # function is used to support updates when polls are initialized when bot was offline
