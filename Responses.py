@@ -12,4 +12,5 @@ def sample_responses(input_text):
 
         return str(date_time)
 
-    return 'I dont understand you'
+    # return empty string if input is invalid
+    return ''
