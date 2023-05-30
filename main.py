@@ -33,7 +33,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
            "/poll: generate poll\n" +
            "/close: close the latest poll or a specific poll that is 'replied to'\n" +
            "/result: report the latest poll result\n" +
-           "/mute: generate annoucements for updates to latest poll\n" +
+           "/mute: generate announcements for updates to latest poll\n" +
            "/unmute: stop announcements for updates to latest poll"
   )
 
