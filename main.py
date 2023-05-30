@@ -189,12 +189,15 @@ async def handle_message(update, context):
   if not response == '':
     await context.bot.send_message(chat_id=update.effective_chat.id, text=response)
 
-async def aware(update, context):
+async def monitor(update, context):
   # function is used to support updates when polls are initialized when bot was offline
+  global mute
+  mute = False
+
   Helper.store_chat_id(update, context)
   await context.bot.send_message(
     Helper.retrieve_chat_id(update),
-    text='Done, stored chat_id'
+    text='I will be reporting changes to attendance 🧐'
   )
 
 async def error(update, context):
@@ -211,7 +214,7 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('result', result))
     application.add_handler(CommandHandler('mute', mute_bot))
     application.add_handler(CommandHandler('unmute', unmute_bot))
-    application.add_handler(CommandHandler('aware', aware))
+    application.add_handler(CommandHandler('monitor', monitor))
     application.add_handler(CommandHandler('help', help))
     application.add_handler(MessageHandler(filters.TEXT, handle_message))
     application.add_handler(PollAnswerHandler(receive_poll_answer))
