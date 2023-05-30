@@ -7,7 +7,8 @@ from telegram import (
 )
 from telegram.constants import ParseMode
 from telegram.ext import *
-from datetime import datetime
+import datetime
+import pytz
 
 print ('Bot started...')
 
@@ -24,8 +25,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text="PE Class 🤖 at your service, ready to take training attendance!"
   )
 
-  Helper.store_chat_id(update, context)
-
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
   await context.bot.send_message(
     chat_id = Helper.retrieve_chat_id(update),
@@ -36,8 +35,6 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
            "/mute: generate announcements for updates to latest poll\n" +
            "/unmute: stop announcements for updates to latest poll"
   )
-
-  Helper.store_chat_id(update, context)
 
 async def close(update: Update, context: ContextTypes.DEFAULT_TYPE):
   chat_id = Helper.retrieve_chat_id(update)
@@ -73,7 +70,7 @@ async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   chat_id = Helper.retrieve_chat_id(update)
   message = await context.bot.send_poll(
     chat_id,
-    f"[Week of {Helper.next_weekday(datetime.now(), 0)}] Training/scrim/pickup - vote for all that you'll show up for",
+    f"[Week of {Helper.next_weekday(datetime.datetime.now(), 0)}] Training/scrim/pickup - vote for all that you'll show up for",
     questions,
     is_anonymous=False,
     allows_multiple_answers=True,
@@ -189,15 +186,17 @@ async def handle_message(update, context):
   if not response == '':
     await context.bot.send_message(chat_id=update.effective_chat.id, text=response)
 
-async def monitor(update, context):
+async def monitor(context: CallbackContext):
   # function is used to support updates when polls are initialized when bot was offline
   global mute
   mute = False
 
-  Helper.store_chat_id(update, context)
+  chat_id = keys.PE_CLASS_ID
+  Helper.store_chat_id(chat_id, context)
+
   await context.bot.send_message(
-    Helper.retrieve_chat_id(update),
-    text='I will be reporting changes to attendance 🧐'
+    chat_id,
+    text='I shall now report changes to attendance 🧐'
   )
 
 async def error(update, context):
@@ -205,6 +204,9 @@ async def error(update, context):
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(keys.API_KEY).build()
+    # initiate scheduled attendance monitoring job
+    jq = application.job_queue
+    jq.run_daily(monitor, time=datetime.time(hour=9, minute=0,second=0, tzinfo=pytz.timezone('Asia/Singapore')), days=(3))
 
     # assign bot commands to code functions
     # /poll to async def poll

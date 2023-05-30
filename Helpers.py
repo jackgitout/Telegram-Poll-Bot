@@ -1,4 +1,5 @@
 from datetime import timedelta
+import Constants as keys
 import re
 
 def next_weekday(d, weekday):
@@ -10,11 +11,10 @@ def next_weekday(d, weekday):
 def latest_poll_id(bot_data):
   return max(list(bot_data))
 
-def store_chat_id(update, context):
-  chat_id = retrieve_chat_id(update)
+def store_chat_id(context):
   payload = {
       '0': {
-          'chat_id': chat_id,
+          'chat_id': keys.PE_CLASS_ID
       }
   }
   context.bot_data.update(payload)
