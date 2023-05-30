@@ -206,7 +206,7 @@ if __name__ == '__main__':
     application = ApplicationBuilder().token(keys.API_KEY).build()
     # initiate scheduled attendance monitoring job
     jq = application.job_queue
-    jq.run_daily(monitor, time=datetime.time(hour=9, minute=0,second=0, tzinfo=pytz.timezone('Asia/Singapore')), days=(3))
+    jq.run_daily(monitor, time=datetime.time(hour=9, minute=0,second=0, tzinfo=pytz.timezone('Asia/Singapore')), days=[3])
 
     # assign bot commands to code functions
     # /poll to async def poll
