@@ -21,7 +21,9 @@ mute = True
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   await context.bot.send_message(
     chat_id=Helper.retrieve_chat_id(update),
-    text="PE Class 🤖 at your service, ready to take training attendance!"
+    text="PE Class 🤖 at your service, ready to take training attendance!\n" +
+         "/poll: to generate poll for upcoming training\n" +
+         "/help: to find out more commands"
   )
 
   Helper.store_chat_id(update, context)
@@ -39,48 +41,27 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
   Helper.store_chat_id(update, context)
 
-async def close(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   chat_id = Helper.retrieve_chat_id(update)
-  message_id = Helper.retrieve_message_id(update, context)
+  chat = await context.bot.get_chat(chat_id)
+  week = f'[Week of {Helper.next_weekday(datetime.now(), 0)}]'
+  question = f"{week} Training/scrim/pickup - vote for all that you'll show up for"
 
-  # if unable to retrieve message_id, bot will look at pinned message for final reference
-  if not message_id:
-    chat = await context.bot.get_chat(chat_id)
-    if chat.pinned_message.from_user.is_bot == True and chat.pinned_message.poll:
-      message_id = chat.pinned_message.message_id
-
-  # closing a poll will unpin the poll and annouce results
-  if message_id:
-    message = await context.bot.stop_poll(
-      chat_id,
-      message_id
-    )
-
-    await context.bot.unpin_chat_message(
-      chat_id,
-      message_id
-    )
-
-    results = Helper.process_poll_results(message.options)
+  if chat.pinned_message and chat.pinned_message.poll.question == question:
     await context.bot.send_message(
       chat_id,
-      f"Poll is now closed for {Helper.extract_training_week(message.question)}!" +
-      f"{results}"
+      text= f'Hang on, there is already an existing poll for {week}'
     )
+    return
 
-async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  questions = keys.OPTIONS.split(', ')
-  chat_id = Helper.retrieve_chat_id(update)
+  options = keys.OPTIONS.split(', ')
   message = await context.bot.send_poll(
     chat_id,
-    f"[Week of {Helper.next_weekday(datetime.now(), 0)}] Training/scrim/pickup - vote for all that you'll show up for",
-    questions,
+    question,
+    options,
     is_anonymous=False,
     allows_multiple_answers=True,
   )
-
-  chat = await context.bot.get_chat(chat_id)
-
   # always try to unpin previous poll to prevent unreliabile results fetching
   if chat.pinned_message:
     await context.bot.unpin_chat_message(
@@ -95,7 +76,7 @@ async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   # Save some info about the poll the bot_data for later use in receive_poll_answer
   payload = {
     message.poll.id: {
-      'questions': questions,
+      'questions': options,
       'message_id': message.message_id,
       'chat_id': chat_id
     }
@@ -107,6 +88,7 @@ async def result(update: Update, context: ContextTypes.DEFAULT_TYPE):
   # does not work on reply_to_message
   chat_id = Helper.retrieve_chat_id(update, context)
   chat = await context.bot.get_chat(chat_id)
+
   if chat.pinned_message.from_user.is_bot == True and chat.pinned_message.poll:
     results = Helper.process_poll_results(chat.pinned_message.poll.options)
 
@@ -199,6 +181,35 @@ async def monitor(update, context):
     Helper.retrieve_chat_id(update),
     text='I will be reporting changes to attendance 🧐'
   )
+
+async def close(update: Update, context: ContextTypes.DEFAULT_TYPE):
+  chat_id = Helper.retrieve_chat_id(update)
+  message_id = Helper.retrieve_message_id(update, context)
+
+  # if unable to retrieve message_id, bot will look at pinned message for final reference
+  if not message_id:
+    chat = await context.bot.get_chat(chat_id)
+    if chat.pinned_message.from_user.is_bot == True and chat.pinned_message.poll:
+      message_id = chat.pinned_message.message_id
+
+  # closing a poll will unpin the poll and annouce results
+  if message_id:
+    message = await context.bot.stop_poll(
+      chat_id,
+      message_id
+    )
+
+    await context.bot.unpin_chat_message(
+      chat_id,
+      message_id
+    )
+
+    results = Helper.process_poll_results(message.options)
+    await context.bot.send_message(
+      chat_id,
+      f"Poll is now closed for {Helper.extract_training_week(message.question)}!" +
+      f"{results}"
+    )
 
 async def error(update, context):
   await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Update {update} caused error {context.error}")
