@@ -211,9 +211,6 @@ async def close(update: Update, context: ContextTypes.DEFAULT_TYPE):
       f"{results}"
     )
 
-async def error(update, context):
-  await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Update {update} caused error {context.error}")
-
 if __name__ == '__main__':
     application = ApplicationBuilder().token(keys.API_KEY).build()
 
@@ -229,5 +226,4 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('help', help))
     application.add_handler(MessageHandler(filters.TEXT, handle_message))
     application.add_handler(PollAnswerHandler(receive_poll_answer))
-    application.add_error_handler(error)
     application.run_polling()
