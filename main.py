@@ -3,11 +3,12 @@ import Constants as keys
 import Responses as R
 import Helpers as Helper
 from telegram import (
-  Update
+  Update, InlineKeyboardButton, InlineKeyboardMarkup
 )
 from telegram.constants import ParseMode
 from telegram.ext import *
 from datetime import datetime
+from random import choice
 
 print ('Bot started...')
 
@@ -41,17 +42,52 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
   Helper.store_chat_id(update, context)
 
-async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def poll(update, context):
+    # Create inline keyboard with Yes and No options
+    keyboard = [
+        [InlineKeyboardButton("Yes ✅", callback_data='yes')],
+        [InlineKeyboardButton("No ⛔️", callback_data='no')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    user = update.effective_user
+    if user.username in keys.DANGER_USERS:
+      alert_msg = f"Omg it's {user.first_name} again..."
+    else:
+      alert_msg = f"Hey {user.first_name}!"
+
+    await context.bot.send_message(chat_id=update.effective_chat.id,
+                                   text=f"{alert_msg} Starting a poll for the week of {Helper.next_weekday(datetime.now(), 0)}?", reply_markup=reply_markup)
+
+async def button_callback(update, context):
+    query = update.callback_query
+    answer = query.data
+
+    if answer == 'yes':
+      await create_poll(update, context)
+    elif answer == 'no':
+      await angry(update, context)
+      angry_msg = choice(keys.ANGRY_RESPONSES.split(','))
+      await context.bot.send_message(
+          chat_id=Helper.retrieve_chat_id(update),
+          text=angry_msg
+      )
+
+    # Answer the callback query
+    await query.answer(text="Button clicked.")
+    await query.message.edit_reply_markup(reply_markup=None)
+
+async def create_poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   chat_id = Helper.retrieve_chat_id(update)
   chat = await context.bot.get_chat(chat_id)
   week = f'[Week of {Helper.next_weekday(datetime.now(), 0)}]'
   question = f"{week} Training/scrim/pickup - vote for all that you'll show up for"
 
-  if chat.pinned_message and chat.pinned_message.poll.question == question:
+  if chat.pinned_message and (chat.pinned_message.poll.question and chat.pinned_message.poll.question == question):
     await context.bot.send_message(
       chat_id,
       text= f'Hang on, there is already an existing poll for {week}'
     )
+    await angry(update, context)
     return
 
   options = keys.OPTIONS.split(', ')
@@ -211,6 +247,11 @@ async def close(update: Update, context: ContextTypes.DEFAULT_TYPE):
       f"{results}"
     )
 
+async def angry(update: Update, context: ContextTypes.DEFAULT_TYPE):
+   sticker_file_id = keys.ANGRY_GIF
+
+   await context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=sticker_file_id)
+
 if __name__ == '__main__':
     application = ApplicationBuilder().token(keys.API_KEY).build()
 
@@ -224,6 +265,8 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('unmute', unmute_bot))
     application.add_handler(CommandHandler('monitor', monitor))
     application.add_handler(CommandHandler('help', help))
+    application.add_handler(CommandHandler('angry', angry))
+    application.add_handler(CallbackQueryHandler(button_callback))
     application.add_handler(MessageHandler(filters.TEXT, handle_message))
     application.add_handler(PollAnswerHandler(receive_poll_answer))
     application.run_polling()
