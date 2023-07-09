@@ -51,7 +51,7 @@ async def poll(update, context):
     reply_markup = InlineKeyboardMarkup(keyboard)
     user = update.effective_user
     if user.username in keys.DANGER_USERS:
-      alert_msg = f"Omg it's {user.first_name} again..."
+      alert_msg = f"Dear esteemed {user.first_name}-sama 🙇‍♀️🙇🙇‍♂️"
     else:
       alert_msg = f"Hey {user.first_name}!"
 
