@@ -50,11 +50,12 @@ async def poll(update, context):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     user = update.effective_user
-    if user.username in keys.DANGER_USERS:
-      greeting = choice(keys.ESTEEMED_RESPONSES.split(','))
-      alert_msg = f"{greeting} {user.first_name}-sama 🙇‍♀️🙇🙇‍♂️"
-    elif user.first_name:
-      alert_msg = f"Hey {user.first_name}!"
+    if user.username:
+      if user.username in keys.DANGER_USERS:
+        greeting = choice(keys.ESTEEMED_RESPONSES.split(','))
+        alert_msg = f"{greeting} {user.first_name}-sama 🙇‍♀️🙇🙇‍♂️"
+      else:
+        alert_msg = f"Hey {user.first_name}!"
     else:
       alert_msg = "Hey Lonelygal_95!"
 
