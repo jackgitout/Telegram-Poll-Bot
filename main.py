@@ -51,9 +51,12 @@ async def poll(update, context):
     reply_markup = InlineKeyboardMarkup(keyboard)
     user = update.effective_user
     if user.username in keys.DANGER_USERS:
-      alert_msg = f"Dear esteemed {user.first_name}-sama 🙇‍♀️🙇🙇‍♂️"
-    else:
+      greeting = choice(keys.ESTEEMED_RESPONSES.split(','))
+      alert_msg = f"{greeting} {user.first_name}-sama 🙇‍♀️🙇🙇‍♂️"
+    elif user.first_name:
       alert_msg = f"Hey {user.first_name}!"
+    else:
+      alert_msg = "Hey Lonelygal_95!"
 
     await context.bot.send_message(chat_id=update.effective_chat.id,
                                    text=f"{alert_msg} Starting a poll for the week of {Helper.next_weekday(datetime.now(), 0)}?", reply_markup=reply_markup)
