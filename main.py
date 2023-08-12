@@ -57,7 +57,7 @@ async def poll(update, context):
       else:
         alert_msg = f"Hey {user.first_name}!"
     else:
-      alert_msg = "Hey Lonelygal_95!"
+      alert_msg = "Hey stranger_danger123!"
 
     await context.bot.send_message(chat_id=update.effective_chat.id,
                                    text=f"{alert_msg} Starting a poll for the week of {Helper.next_weekday(datetime.now(), 0)}?", reply_markup=reply_markup)
