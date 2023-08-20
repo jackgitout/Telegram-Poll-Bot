@@ -60,7 +60,7 @@ async def poll(update, context):
       alert_msg = "Hey stranger_danger123!"
 
     await context.bot.send_message(chat_id=update.effective_chat.id,
-                                   text=f"{alert_msg} Starting a poll for the week of {Helper.next_weekday(datetime.now(), 0)}?", reply_markup=reply_markup)
+                                   text=f"{alert_msg} Starting a poll for the week of {Helper.next_weekday(datetime.now(), 2)}?", reply_markup=reply_markup)
 
 async def button_callback(update, context):
     query = update.callback_query
@@ -83,7 +83,7 @@ async def button_callback(update, context):
 async def create_poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   chat_id = Helper.retrieve_chat_id(update)
   chat = await context.bot.get_chat(chat_id)
-  week = f'[Week of {Helper.next_weekday(datetime.now(), 0)}]'
+  week = f'[Week of {Helper.next_weekday(datetime.now(), 2)}]'
   question = f"{week} Training/scrim/pickup - vote for all that you'll show up for"
 
   if chat.pinned_message and (chat.pinned_message.poll.question and chat.pinned_message.poll.question == question):
