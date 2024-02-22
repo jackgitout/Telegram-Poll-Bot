@@ -1,5 +1,7 @@
 from datetime import timedelta
+import Constants as keys
 import re
+from random import choice, shuffle
 
 def next_weekday(d, weekday):
   days_ahead = weekday - d.weekday()
@@ -54,3 +56,40 @@ def process_poll_results(options):
 def extract_training_week(question_str):
   pattern = "\[(.*)\]"
   return re.search(pattern, question_str).group()
+
+def greeting(user):
+  if user.username:
+    if user.username in keys.DANGER_USERS:
+      greeting = choice(keys.ESTEEMED_RESPONSES.split(','))
+      return f"{greeting} {user.first_name}-sama 🙇‍♀️🙇🙇‍♂️"
+    else:
+        return f"Hey {user.first_name}!"
+  else:
+    return "Hey stranger_danger123!"
+
+def type_of_request(text):
+  if re.search(r"Starting a poll", text):
+    return 1
+  elif re.search(r"Picking lines", text):
+    return 2
+  elif re.search(r"Happy with the lines?", text):
+    return 3
+
+def split_lines(attendance):
+  lights = {'M': [], 'F': []}
+  darks = {'M': [], 'F': []}
+
+  # Shuffle the attendance list to ensure randomness
+  shuffle(attendance)
+
+  for player in attendance:
+    gender = player[-2]  # Assuming the gender is always at the 2nd position from the end
+
+    name = re.sub(r'\s*\([MF]\)$', '', player)
+    # Determine the key based on gender and availability
+    if len(lights[gender]) <= len(darks[gender]):
+      lights[gender].append(name)
+    else:
+      darks[gender].append(name)
+
+  return {'Lights': lights, 'Darks': darks}
