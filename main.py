@@ -35,7 +35,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = "Glad you asked, here is what I can do!\n" +
            "/poll: generate poll\n" +
            "/close: close the latest poll or a specific poll that is 'replied to'\n" +
-           "/result: report the latest poll result\n" +
+           "/result: report the latest poll result or a specific poll that is 'replied to'\n" +
            "/lines: pick the players in attendance and let me shuffle them into lines" +
            "/mute: generate announcements for updates to latest poll\n" +
            "/unmute: stop announcements for updates to latest poll"
@@ -205,20 +205,32 @@ async def create_poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   context.bot_data.update(payload)
 
 async def result(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  # result only generated from latest pinned poll
-  # does not work on reply_to_message
-  chat_id = Helper.retrieve_chat_id(update, context)
-  chat = await context.bot.get_chat(chat_id)
+  chat_id = Helper.retrieve_chat_id(update)
+  message_id = Helper.retrieve_message_id(update, context)
 
-  if chat.pinned_message.from_user.is_bot == True and chat.pinned_message.poll:
-    results = Helper.process_poll_results(chat.pinned_message.poll.options)
+  # if unable to retrieve message_id, bot will look at pinned message for final reference
+  if not message_id:
+    chat = await context.bot.get_chat(chat_id)
+    if chat.pinned_message.from_user.is_bot == True and chat.pinned_message.poll:
+      results = Helper.process_poll_results(chat.pinned_message.poll.options)
+
+      await context.bot.send_message(
+        chat_id,
+        f"Here's the latest poll result for {Helper.extract_training_week(chat.pinned_message.poll.question)}" +
+        f"{results}",
+        parse_mode=ParseMode.HTML
+      )
+  else:
+    results = Helper.process_poll_results(update.message.reply_to_message.poll.options)
+    question = update.message.reply_to_message.poll.question
 
     await context.bot.send_message(
       chat_id,
-      f"Here's the latest poll result for {Helper.extract_training_week(chat.pinned_message.poll.question)}" +
+      f"{question}" +
       f"{results}",
       parse_mode=ParseMode.HTML
     )
+
 
 async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Summarize a users poll vote"""
