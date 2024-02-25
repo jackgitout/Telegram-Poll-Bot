@@ -77,6 +77,13 @@ async def lines(update, context):
                                    text=f"{alert_msg} Picking lines?", reply_markup=reply_markup)
 
 async def reshuffle_or_not(update, context, query, lines):
+  # Close options menu
+  await query.message.edit_reply_markup(
+    reply_markup = None
+  )
+  # Save lines in user_data
+  context.user_data['lines'] = lines
+
   # Send the final attendance message
   await context.bot.send_message(
     chat_id=Helper.retrieve_chat_id(update),
@@ -90,10 +97,6 @@ async def reshuffle_or_not(update, context, query, lines):
   await context.bot.send_message(
     chat_id=Helper.retrieve_chat_id(update),
     text=f"🌑 Darks: {lines['Darks']}"
-  )
-
-  await query.message.edit_reply_markup(
-    reply_markup = None
   )
 
   keyboard = [
@@ -110,7 +113,11 @@ async def button_callback(update, context):
     text = query.message.text
     answer = query.data
 
+    # Answer the callback query
+    await query.answer()
+
     match Helper.type_of_request(text):
+      # Create weekly poll
       case 1:
         if answer == 'yes':
           await create_poll(update, context)
@@ -121,6 +128,11 @@ async def button_callback(update, context):
             chat_id=Helper.retrieve_chat_id(update),
             text=angry_msg
           )
+
+        await query.message.edit_reply_markup(
+          reply_markup = None
+        )
+      # Pick lines
       case 2:
         attendance = context.user_data['attendance']
 
@@ -142,11 +154,14 @@ async def button_callback(update, context):
             chat_id=Helper.retrieve_chat_id(update),
             text=f"{answer} added to lines shuffle, anyone else?",
             )
+      # Reshuffle lines
       case 3:
         if answer == 'done':
+          pretty_lines = Helper.process_final_lines(context.user_data['lines'])
+
           await context.bot.send_message(
             chat_id=Helper.retrieve_chat_id(update),
-            text="Bueno, hasta luego! 👋",
+            text=f"{pretty_lines}",
           )
 
           await query.message.edit_reply_markup(
@@ -157,9 +172,6 @@ async def button_callback(update, context):
           lines = Helper.split_lines(attendance)
 
           await reshuffle_or_not(update, context, query, lines)
-
-    # Answer the callback query
-    await query.answer()
 
 async def create_poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   chat_id = Helper.retrieve_chat_id(update)
@@ -230,7 +242,6 @@ async def result(update: Update, context: ContextTypes.DEFAULT_TYPE):
       f"{results}",
       parse_mode=ParseMode.HTML
     )
-
 
 async def receive_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Summarize a users poll vote"""

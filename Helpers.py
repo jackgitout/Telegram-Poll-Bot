@@ -53,6 +53,21 @@ def process_poll_results(options):
 
   return result
 
+def process_final_lines(lines):
+  pretty_lines = ''
+
+  for color, gender_players in lines.items():
+    pretty_lines += '\n'
+    pretty_lines += f"\n=={color}=="
+
+    for gender, players in gender_players.items():
+      pretty_lines += f"\n[{gender}]"
+
+      for player in players:
+        pretty_lines += f"\n{player}"
+
+  return pretty_lines
+
 def extract_training_week(question_str):
   pattern = "\[(.*)\]"
   return re.search(pattern, question_str).group()
