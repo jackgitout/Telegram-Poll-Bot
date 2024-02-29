@@ -68,6 +68,7 @@ async def lines(update, context):
       keyboard.append([InlineKeyboardButton(f"{player}", callback_data=f"{player}")])
 
     keyboard.append([InlineKeyboardButton("Continue", callback_data='continue')])
+    keyboard.append([InlineKeyboardButton("Cancel", callback_data='cancel')])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     user = update.effective_user
@@ -77,10 +78,6 @@ async def lines(update, context):
                                    text=f"{alert_msg} Picking lines?", reply_markup=reply_markup)
 
 async def reshuffle_or_not(update, context, query, lines):
-  # Close options menu
-  await query.message.edit_reply_markup(
-    reply_markup = None
-  )
   # Save lines in user_data
   context.user_data['lines'] = lines
 
@@ -136,40 +133,52 @@ async def button_callback(update, context):
       case 2:
         attendance = context.user_data['attendance']
 
-        if answer == 'continue':
+        if answer == 'cancel':
+          await query.message.edit_reply_markup(
+            reply_markup = None
+          )
+          await context.bot.send_message(
+            chat_id=Helper.retrieve_chat_id(update),
+            text=f"Bye!",
+          )
+        elif answer == 'continue':
           lines = Helper.split_lines(attendance)
-
+          await query.message.edit_reply_markup(
+            reply_markup = None
+          )
           await reshuffle_or_not(update, context, query, lines)
-
         else:
           if answer in attendance:
             await context.bot.send_message(
-            chat_id=Helper.retrieve_chat_id(update),
-            text=f"{answer} already selected",
+              chat_id=Helper.retrieve_chat_id(update),
+              text=f"{answer} already selected",
             )
-
           else:
             attendance.append(answer)
             await context.bot.send_message(
-            chat_id=Helper.retrieve_chat_id(update),
-            text=f"{answer} added to lines shuffle, anyone else?",
+              chat_id=Helper.retrieve_chat_id(update),
+              text=f"{answer} added to lines shuffle, anyone else?",
             )
       # Reshuffle lines
       case 3:
         if answer == 'done':
           pretty_lines = Helper.process_final_lines(context.user_data['lines'])
 
+          await query.message.edit_reply_markup(
+            reply_markup = None
+          )
+
           await context.bot.send_message(
             chat_id=Helper.retrieve_chat_id(update),
             text=f"{pretty_lines}",
           )
+        else:
+          attendance = context.user_data['attendance']
+          lines = Helper.split_lines(attendance)
 
           await query.message.edit_reply_markup(
             reply_markup = None
           )
-        else:
-          attendance = context.user_data['attendance']
-          lines = Helper.split_lines(attendance)
 
           await reshuffle_or_not(update, context, query, lines)
 
