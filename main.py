@@ -67,8 +67,8 @@ async def lines(update, context):
     for player in sorted(keys.PLAYERS.split(',')):
       keyboard.append([InlineKeyboardButton(f"{player}", callback_data=f"{player}")])
 
-    keyboard.append([InlineKeyboardButton("Continue", callback_data='continue')])
-    keyboard.append([InlineKeyboardButton("Cancel", callback_data='cancel')])
+    keyboard.append([InlineKeyboardButton("Continue ✅", callback_data='continue')])
+    keyboard.append([InlineKeyboardButton("Cancel ⛔️", callback_data='cancel')])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     user = update.effective_user
@@ -77,7 +77,7 @@ async def lines(update, context):
     await context.bot.send_message(chat_id=update.effective_chat.id,
                                    text=f"{alert_msg} Picking lines?", reply_markup=reply_markup)
 
-async def reshuffle_or_not(update, context, query, lines):
+async def reshuffle_or_not(update, context, lines):
   # Save lines in user_data
   context.user_data['lines'] = lines
 
@@ -146,7 +146,7 @@ async def button_callback(update, context):
           await query.message.edit_reply_markup(
             reply_markup = None
           )
-          await reshuffle_or_not(update, context, query, lines)
+          await reshuffle_or_not(update, context, lines)
         else:
           if answer in attendance:
             await context.bot.send_message(
@@ -180,7 +180,7 @@ async def button_callback(update, context):
             reply_markup = None
           )
 
-          await reshuffle_or_not(update, context, query, lines)
+          await reshuffle_or_not(update, context, lines)
 
 async def create_poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   chat_id = Helper.retrieve_chat_id(update)
@@ -188,13 +188,14 @@ async def create_poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
   week = f'[Week of {Helper.next_weekday(datetime.now(), 2)}]'
   question = f"{week} Training/scrim/pickup - vote for all that you'll show up for"
 
-  if chat.pinned_message and (chat.pinned_message.poll.question and chat.pinned_message.poll.question == question):
-    await context.bot.send_message(
-      chat_id,
-      text= f'Hang on, there is already an existing poll for {week}'
-    )
-    await angry(update, context)
-    return
+  if (chat.pinned_message and chat.pinned_message.from_user.first_name == 'pepoll') and chat.pinned_message.poll:
+    if (chat.pinned_message.poll.question and chat.pinned_message.poll.question == question):
+      await context.bot.send_message(
+        chat_id,
+        text= f'Hang on, there is already an existing poll for {week}'
+      )
+      await angry(update, context)
+      return
 
   options = keys.OPTIONS.split(', ')
   message = await context.bot.send_poll(
