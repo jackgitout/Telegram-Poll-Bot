@@ -216,10 +216,10 @@ async def create_poll(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id,
     message.message_id
   )
-  if keys.ANNOUCEMENT:
+  if keys.ANNOUNCEMENT:
     await context.bot.send_message(
       chat_id,
-      text = keys.ANNOUCEMENT
+      text = keys.ANNOUNCEMENT
     )
 
   # Save some info about the poll the bot_data for later use in receive_poll_answer
